@@ -35,11 +35,12 @@ def login():
         page.mouse.move(622, 383)
         page.mouse.click(622, 383)
 
+        # complete captcha
         input("Please complete captcha and press enter to continue")
         time.sleep(3)
 
         # collect cookies
-        storage = context.storage_state(path="state.json")
+        context.storage_state(path="state.json")
 
         time.sleep(2)
 
