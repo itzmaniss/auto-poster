@@ -4,8 +4,8 @@ import dotenv
 
 dotenv.load_dotenv()
 
-def main(path, caption): 
 
+def main(path, caption):
     client = Client()
 
     username, password = os.getenv("insta_uid"), os.getenv("insta_pwd")

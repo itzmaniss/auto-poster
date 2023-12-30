@@ -54,6 +54,6 @@ def post():
         page = context.new_page()
 
         page.goto("https://www.tiktok.com/creator-center/upload?from=upload")
-        time.sleep(10)
+        input()
 
         browser.close()
