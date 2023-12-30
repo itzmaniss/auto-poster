@@ -46,14 +46,36 @@ def login():
 
         browser.close()
 
-def post():
+def post(path, caption):
     with sync_playwright() as p:
 
-        browser = p.firefox.launch(headless=False)
+        browser = p.chromium.launch()
         context = browser.new_context(storage_state= "state.json")
         page = context.new_page()
 
-        page.goto("https://www.tiktok.com/creator-center/upload?from=upload")
-        input()
+        page.goto("https://www.tiktok.com/creator#/upload?scene=creator_center")
+        time.sleep(4)
+
+        # upload video file
+        with page.expect_file_chooser() as fc_info:
+            page.locator('css=button').dblclick()
+            file_chooser = fc_info.value
+        file_chooser.set_files(path)
+        # time.sleep(2)
+
+        # type in captionb
+        page.locator("//div[@spellcheck='false']").fill(caption)
+        print("waitiing for upload to finish")
+        time.sleep(20)
+        print("clicking")
+
+
+        page.locator("//div[contains(@class, 'jsx-399018856') and contains(@class, 'btn-post')]//button[contains(., 'Post')]").click()
+        print("clicked")
+        time.sleep(20)
 
         browser.close()
+
+with open("caption.txt", "r") as file:
+    caption = file.read()
+post("./test_File.mp4", caption)
