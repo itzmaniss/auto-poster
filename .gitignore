@@ -9,6 +9,7 @@ meta.p
 app.py
 static/
 templates/
+tiktok_chromium.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

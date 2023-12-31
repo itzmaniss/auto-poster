@@ -1,9 +1,12 @@
 import time
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, Playwright
 import dotenv
 import os
 
 dotenv.load_dotenv()
+
+# def run(playwright: Playwright):
+
 
 def login():
     with sync_playwright() as p:
@@ -41,38 +44,42 @@ def login():
 
         # collect cookies
         context.storage_state(path="state.json")
-
         time.sleep(2)
 
         browser.close()
 
 def post(path, caption):
+
+
     with sync_playwright() as p:
 
-        browser = p.chromium.launch()
-        context = browser.new_context(storage_state= "state.json")
+        # launch the browser
+        browser = p.firefox.launch()
+        context = browser.new_context(storage_state= "state.json",**p.devices["Desktop Firefox"])
         page = context.new_page()
 
+        # goto the posting page
         page.goto("https://www.tiktok.com/creator#/upload?scene=creator_center")
-        time.sleep(4)
+        time.sleep(2)
 
         # upload video file
         with page.expect_file_chooser() as fc_info:
-            page.locator('css=button').dblclick()
+            page.locator('css=button:has-text("Select file")').dblclick()
             file_chooser = fc_info.value
         file_chooser.set_files(path)
-        # time.sleep(2)
 
-        # type in captionb
+
+        # type in caption
         page.locator("//div[@spellcheck='false']").fill(caption)
         print("waitiing for upload to finish")
-        time.sleep(20)
+        time.sleep(10)
         print("clicking")
 
 
-        page.locator("//div[contains(@class, 'jsx-399018856') and contains(@class, 'btn-post')]//button[contains(., 'Post')]").click()
+        # page.locator("//div[contains(@class, 'jsx-399018856') and contains(@class, 'btn-post')]//button[contains(., 'Post')]").click()
+        page.evaluate('document.querySelector(".btn-post > button").click()')
         print("clicked")
-        time.sleep(20)
+        time.sleep(10)
 
         browser.close()
 
