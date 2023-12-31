@@ -9,7 +9,7 @@ from googleapiclient.http import MediaFileUpload
 scopes = ["https://www.googleapis.com/auth/youtube.upload"]
 
 
-def main():
+def main(path, caption):
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     api_service_name = "youtube"
@@ -25,21 +25,17 @@ def main():
         api_service_name, api_version, credentials=credentials
     )
 
+    # send video upload request
     request = youtube.videos().insert(
         part="snippet,status",
         body={
             "snippet": {
-                "description": "#staycozy  #cozycoregear #winterwardrobe  #linkinbio  #buynowwearnow #tiktokmademebuyit #selfheatingjacket #winter #fyp #winterbuys #christmas #christmasgifts",
+                "description": caption,
                 "title": "Buy yours now at cozycore.com!!! link in bio.",
             },
             "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False},
         },
-        # TODO: For this request to work, you must replace "YOUR_FILE"
-        #       with a pointer to the actual file you are uploading.
-        media_body=MediaFileUpload("./test_File.mp4"),
+        media_body=MediaFileUpload(path),
     )
     response = request.execute()
-
-
-if __name__ == "__main__":
-    main()
+    return response

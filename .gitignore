@@ -10,6 +10,10 @@ app.py
 static/
 templates/
 tiktok_chromium.py
+.ipynb
+config.toml
+cozycore_videos/
+used/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

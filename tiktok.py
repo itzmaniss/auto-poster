@@ -5,14 +5,9 @@ import os
 
 dotenv.load_dotenv()
 
-# def run(playwright: Playwright):
 
-
-def login():
+def login(username, password, account):
     with sync_playwright() as p:
-        username = os.getenv("tiktok_uid")
-        password = os.getenv("tiktok_pwd")
-
         browser = p.firefox.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
@@ -25,7 +20,7 @@ def login():
         page.mouse.click(497, 235)
         page.keyboard.type(username, delay=200)
 
-        # enter password 
+        # enter password
         page.mouse.move(497, 302)
         page.mouse.click(497, 302)
         page.keyboard.type(password, delay=200)
@@ -34,7 +29,7 @@ def login():
         time.sleep(1)
         page.mouse.click(818, 318)
 
-        #click login
+        # click login
         page.mouse.move(622, 383)
         page.mouse.click(622, 383)
 
@@ -43,19 +38,19 @@ def login():
         time.sleep(3)
 
         # collect cookies
-        context.storage_state(path="state.json")
+        context.storage_state(path=f"{account}_state.json")
         time.sleep(2)
 
         browser.close()
 
-def post(path, caption):
 
-
+def post(path, caption, storage_state):
     with sync_playwright() as p:
-
         # launch the browser
         browser = p.firefox.launch()
-        context = browser.new_context(storage_state= "state.json",**p.devices["Desktop Firefox"])
+        context = browser.new_context(
+            storage_state=storage_state, **p.devices["Desktop Firefox"]
+        )
         page = context.new_page()
 
         # goto the posting page
@@ -68,13 +63,12 @@ def post(path, caption):
             file_chooser = fc_info.value
         file_chooser.set_files(path)
 
-
         # type in caption
-        page.locator("//div[@spellcheck='false']").fill(caption)
+        page.locator("//div[@spellcheck='false']").click()
+        page.keyboard.type(caption)
         print("waitiing for upload to finish")
         time.sleep(10)
         print("clicking")
-
 
         # page.locator("//div[contains(@class, 'jsx-399018856') and contains(@class, 'btn-post')]//button[contains(., 'Post')]").click()
         page.evaluate('document.querySelector(".btn-post > button").click()')
@@ -82,7 +76,3 @@ def post(path, caption):
         time.sleep(10)
 
         browser.close()
-
-with open("caption.txt", "r") as file:
-    caption = file.read()
-post("./test_File.mp4", caption)
