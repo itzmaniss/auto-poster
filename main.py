@@ -1,5 +1,5 @@
-from pathlib import Path
 from datetime import date
+from pathlib import Path
 import os
 import toml
 import random
@@ -8,65 +8,57 @@ import logging
 import tiktok
 import youtube
 import instagram
+import sys
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def main():
 
-def main(account: str, check_lr: bool = False):
+    # get account
+    account = sys.argv[1]
+
     # Load config file
     with open("config.toml", "r") as file:
         config = toml.load(file)
 
-    # Check when the script was last run
-    if check_lr == True:
-        if config["last run"]["date"] == str(date.today()):
-            logger.info("Script already run today. Exiting.")
-            return
-
     # Select a random video
-    folder = config[account]["path"]
+    folder = Path(config[account]["path"])
     video_name = random.choice(os.listdir(folder))
-    video = folder + video_name
-    logger.info(f"{video} has been chosen. {type(video)}")
+    video = folder.joinpath(video_name)
+    logger.info(f"{video} has been chosen.")
 
     # Get relevant info
     caption = config[account]["caption"]
-    tiktok_cookies = config[account]["tiktok_cookies"]
-    instagram_uid = config[account]["insta_uid"]
-    instagram_pwd = config[account]["insta_pwd"]
+    storage_state = Path(config[account]["storage_state"])
+    
+    # create the threads
+    threads = (threading.Thread(target=tiktok.post, args=(video, caption, storage_state,)),
+               threading.Thread(target=instagram.post, args=(video, caption, storage_state,)),
+               threading.Thread(target=youtube.post, args=(video, caption, storage_state,)))
 
-    # Create threads for each social media platform
-    threads = [
-        threading.Thread(target=tiktok.post, args=(video, caption, tiktok_cookies)),
-        threading.Thread(
-            target=instagram.main, args=(instagram_uid, instagram_pwd, video, caption)
-        ),
-        threading.Thread(target=youtube.main, args=(video, caption)),
-    ]
-
-    # Start and join threads
+    # start and join threads
+    logger.info("Starting Threads")
     for thread in threads:
         thread.start()
-
+    
     for thread in threads:
-        thread.join()
+        thread.join()      
+    logger.info("Threads have been joined")    
 
-    # update last used date
-    config["last run"]["date"] = str(date.today())
+    logger.info("Updating last used date")
+    config[account]["last_run"] = str(date.today())
     with open("config.toml", "w") as file:
         toml.dump(config, file)
 
     # move used video away to prevent reselection
     if not os.path.exists("./used"):
+        logger.info("Creating a used folder for used videos")
         os.mkdir("./used")
 
-    os.rename(video, f"./used/{video_name}")
-    os.rename(f"{video}.jpg", f"./used/{video_name}")
-
-    return
-
+    logger.info("Moving used video to Used folder")
+    video.rename(f"./used/{video_name}")
 
 if __name__ == "__main__":
-    main("cozycore")
+    main()

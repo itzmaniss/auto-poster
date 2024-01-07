@@ -14,6 +14,19 @@ tiktok_chromium.py
 config.toml
 cozycore_videos/
 used/
+fidgetink_state.json
+instagram_old.py
+caption.txt
+testfile.mp4
+fidgetink_videos/
+test.py
+fidgetink.bat
+temp_main.py
+requirements2.txt
+youtube_api.py
+main_old.py
+caption.txt
+resources/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

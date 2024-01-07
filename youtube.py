@@ -1,41 +1,50 @@
-import os
+from playwright.sync_api import sync_playwright
+import logging
+import time
+from pathlib import Path
 
-import google_auth_oauthlib.flow
-import googleapiclient.discovery
-import googleapiclient.errors
-
-from googleapiclient.http import MediaFileUpload
-
-scopes = ["https://www.googleapis.com/auth/youtube.upload"]
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-def main(path, caption):
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+def post(path, caption, storage_state):
+    logger.info("Opening up youtube website")
+    path = Path(path)
+    with sync_playwright() as p:
+        # launch the browser
+        browser = p.firefox.launch()
+        context = browser.new_context(
+            storage_state=storage_state, **p.devices["Desktop Firefox"]
+        )
+        page = context.new_page()
 
-    api_service_name = "youtube"
-    api_version = "v3"
-    client_secrets_file = "./google.json"
+        page.goto("https://studio.youtube.com/channel/")
+        page.locator("text=Create").click()
+        page.locator("text=Upload videos").click()
 
-    # Get credentials and create an API client
-    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
-        client_secrets_file, scopes
-    )
-    credentials = flow.run_local_server()
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, credentials=credentials
-    )
+        with page.expect_file_chooser() as fc_info:
+            page.locator("text=SELECT FILES").click()
+            file_chooser = fc_info.value
+        file_chooser.set_files(path)
+        time.sleep(3)
 
-    # send video upload request
-    request = youtube.videos().insert(
-        part="snippet,status",
-        body={
-            "snippet": {
-                "description": caption,
-                "title": "Buy yours now at cozycore.com!!! link in bio.",
-            },
-            "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False},
-        },
-        media_body=MediaFileUpload(path),
-    )
-    response = request.execute()
-    return response
+        page.get_by_label(
+            "Add a title that describes your video (type @ to mention a channel)"
+        ).fill(caption)
+        time.sleep(2)
+
+        page.get_by_label(
+            "Tell viewers about your video (type @ to mention a channel)"
+        ).fill(caption)
+
+        for i in range(3):
+            page.get_by_role("button", name="Next").click()
+
+        page.locator(
+            'tp-yt-paper-radio-button[aria-checked="false"][name="PUBLIC"]'
+        ).check()
+
+        page.get_by_role("button", name="Publish").click()
+        
+
+        browser.close()
